@@ -9,6 +9,7 @@ UPROGS=\
 	ls\
 	mkdir\
 	rm\
+	date\
 	sh\
 	stressfs\
 	usertests\

@@ -16,14 +16,25 @@ sys_fork(void)
 int
 sys_exit(void)
 {
-  exit();
+  int e_status;
+
+  if(argint(0, &e_status) < 0){
+    return -1;
+  }
+  exit(e_status);
   return 0;  // not reached
 }
 
 int
 sys_wait(void)
 {
-  return wait();
+  int *status;
+
+  if(argptr(0, (void*)&status, sizeof(int)) < 0){
+    return -1;
+  }
+
+  return wait(status);
 }
 
 int
@@ -88,4 +99,17 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+int 
+sys_date(void)
+{
+  struct rtcdate *r;
+
+  if(argptr(0, (void **)&r, sizeof(struct rtcdate)) < 0){
+    return -1;
+  }
+  cmostime(r);
+
+  return 0;
 }

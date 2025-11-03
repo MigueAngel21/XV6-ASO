@@ -67,6 +67,39 @@ sys_dup(void)
 }
 
 int
+sys_dup2(void)
+{
+  struct file *f, *nf;
+  int oldfd, newfd;
+
+  if(argint(0, &oldfd) < 0 || argint(1, &newfd) < 0){
+    return -1;
+  }
+
+  if(oldfd < 0 || oldfd >= NOFILE || (f=myproc()->ofile[oldfd]) == 0){
+    return -1;
+  }
+
+  if(newfd < 0 || newfd >= NOFILE){
+    return -1;
+  }
+
+  if(oldfd == newfd){
+    return newfd;
+  }
+
+  nf = myproc()->ofile[newfd];
+  if(nf){
+    fileclose(nf);
+  }
+
+  myproc()->ofile[newfd] = f;
+  filedup(f);
+  return newfd;
+}
+
+
+int
 sys_read(void)
 {
   struct file *f;

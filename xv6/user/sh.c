@@ -65,7 +65,7 @@ runcmd(struct cmd *cmd)
   struct redircmd *rcmd;
 
   if(cmd == 0)
-    exit();
+    exit(0);
 
   switch(cmd->type){
   default:
@@ -74,7 +74,7 @@ runcmd(struct cmd *cmd)
   case EXEC:
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
-      exit();
+      exit(0);
     exec(ecmd->argv[0], ecmd->argv);
     printf(2, "exec %s failed\n", ecmd->argv[0]);
     break;
@@ -84,7 +84,7 @@ runcmd(struct cmd *cmd)
     close(rcmd->fd);
     if(open(rcmd->file, rcmd->mode) < 0){
       printf(2, "open %s failed\n", rcmd->file);
-      exit();
+      exit(0);
     }
     runcmd(rcmd->cmd);
     break;
@@ -93,7 +93,7 @@ runcmd(struct cmd *cmd)
     lcmd = (struct listcmd*)cmd;
     if(fork1() == 0)
       runcmd(lcmd->left);
-    wait();
+    wait(NULL);
     runcmd(lcmd->right);
     break;
 
@@ -102,23 +102,25 @@ runcmd(struct cmd *cmd)
     if(pipe(p) < 0)
       panic("pipe");
     if(fork1() == 0){
-      close(1);
-      dup(p[1]);
+      close(1); //tener en cuenta, si falla algo comentarlo
+      //dup(p[1]);
+      dup2(p[1], 1);
       close(p[0]);
       close(p[1]);
       runcmd(pcmd->left);
     }
     if(fork1() == 0){
-      close(0);
-      dup(p[0]);
+      close(0);//tener en cuenta, si falla algo comentarlo
+      //dup(p[0]);
+      dup2(p[0], 0);
       close(p[0]);
       close(p[1]);
       runcmd(pcmd->right);
     }
     close(p[0]);
     close(p[1]);
-    wait();
-    wait();
+    wait(NULL);
+    wait(NULL);
     break;
 
   case BACK:
@@ -127,7 +129,7 @@ runcmd(struct cmd *cmd)
       runcmd(bcmd->cmd);
     break;
   }
-  exit();
+  exit(0);
 }
 
 int
@@ -164,18 +166,30 @@ main(void)
         printf(2, "cannot cd %s\n", buf+3);
       continue;
     }
-    if(fork1() == 0)
+    if(fork1() == 0){
       runcmd(parsecmd(buf));
-    wait();
+    }else if(fork1() > 0){
+      int status;
+      wait(&status);
+
+      if(WIFEXITED(status)){
+        printf(1, "Output Code: %d\n", WEXITSTATUS(status));
+
+      } else if(WIFSIGNALED(status)){
+        printf(1, "Output Code: %d\n", WEXITTRAP(status));
+      }
+
+    }
+    //wait(NULL);
   }
-  exit();
+  exit(0);
 }
 
 void
 panic(char *s)
 {
   printf(2, "%s\n", s);
-  exit();
+  exit(0);
 }
 
 int
