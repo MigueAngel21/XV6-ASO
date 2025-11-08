@@ -168,7 +168,7 @@ main(void)
     }
     if(fork1() == 0){
       runcmd(parsecmd(buf));
-    }else if(fork1() > 0){
+    }
       int status;
       wait(&status);
 
@@ -178,8 +178,6 @@ main(void)
       } else if(WIFSIGNALED(status)){
         printf(1, "Output Code: %d\n", WEXITTRAP(status)); //revisar
       }
-
-    }
     //wait(NULL);
   }
   exit(0);
