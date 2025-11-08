@@ -21,6 +21,7 @@ sys_exit(void)
   if(argint(0, &e_status) < 0){
     return -1;
   }
+
   exit(e_status);
   return 0;  // not reached
 }

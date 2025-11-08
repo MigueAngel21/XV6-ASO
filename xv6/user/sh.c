@@ -102,7 +102,7 @@ runcmd(struct cmd *cmd)
     if(pipe(p) < 0)
       panic("pipe");
     if(fork1() == 0){
-      close(1); //tener en cuenta, si falla algo comentarlo
+      //close(1); //tener en cuenta, si falla algo comentarlo
       //dup(p[1]);
       dup2(p[1], 1);
       close(p[0]);
@@ -110,7 +110,7 @@ runcmd(struct cmd *cmd)
       runcmd(pcmd->left);
     }
     if(fork1() == 0){
-      close(0);//tener en cuenta, si falla algo comentarlo
+      //close(0);//tener en cuenta, si falla algo comentarlo
       //dup(p[0]);
       dup2(p[0], 0);
       close(p[0]);
@@ -176,7 +176,7 @@ main(void)
         printf(1, "Output Code: %d\n", WEXITSTATUS(status));
 
       } else if(WIFSIGNALED(status)){
-        printf(1, "Output Code: %d\n", WEXITTRAP(status));
+        printf(1, "Output Code: %d\n", WEXITTRAP(status)); //revisar
       }
 
     }

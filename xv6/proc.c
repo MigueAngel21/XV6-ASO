@@ -268,6 +268,8 @@ exit(int e_status)
 
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
+  curproc->status = e_status;
+  
   sched();
   panic("zombie exit");
 }
@@ -291,7 +293,11 @@ wait(int *status)
       havekids = 1;
       if(p->state == ZOMBIE){
         // Found one.
-
+        if(status != NULL)
+        {
+          *status = p->status;
+        }
+        
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
@@ -301,6 +307,9 @@ wait(int *status)
         p->name[0] = 0;
         p->killed = 0;
         p->state = UNUSED;
+        
+        
+
         release(&ptable.lock);
         return pid;
       }
