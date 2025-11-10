@@ -1,6 +1,9 @@
 UPROGS=\
 	cat\
+	date\
+	dup2test\
 	echo\
+	exitwait\
 	forktest\
 	grep\
 	init\
@@ -9,7 +12,6 @@ UPROGS=\
 	ls\
 	mkdir\
 	rm\
-	date\
 	sh\
 	stressfs\
 	usertests\
