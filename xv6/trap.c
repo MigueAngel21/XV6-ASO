@@ -77,6 +77,7 @@ trap(struct trapframe *tf)
             cpuid(), tf->cs, tf->eip);
     lapiceoi();
     break;
+    //hacer un case nuevo para el T_PGFLT y que haga lo que hace el growproc
 
   //PAGEBREAK: 13
   default:
@@ -86,6 +87,9 @@ trap(struct trapframe *tf)
               tf->trapno, cpuid(), tf->eip, rcr2());
       panic("trap");
     }
+
+    // aqui hay que añadir aqui algo que dice el boletin
+
     // In user space, assume process misbehaved.
     cprintf("pid %d %s: trap %d err %d on cpu %d "
             "eip 0x%x addr 0x%x--kill proc\n",

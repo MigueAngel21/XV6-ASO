@@ -62,8 +62,8 @@ sys_sbrk(void)
 
   if(argint(0, &n) < 0)
     return -1;
-  addr = myproc()->sz;
-  if(growproc(n) < 0)
+  addr = myproc()->sz; //este tamaño se debe incrementar
+  if(growproc(n) < 0) //no se debe hacer esta llamada a growproc //sacar la suma de este tamaño fuera y no llamar a growproc (ver implementacion de growproc)
     return -1;
   return addr;
 }
