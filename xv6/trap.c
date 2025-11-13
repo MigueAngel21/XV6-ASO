@@ -14,6 +14,11 @@ extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
 uint ticks;
 
+//Declaracion de mappaPages como funcion externa de vm.c
+extern int mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm);
+//Declaracion de walkpgdir como funcion externa de vm.c
+extern pte_t *walkpgdir(pde_t *pgdir, const void *va, int alloc);
+
 void
 tvinit(void)
 {
@@ -77,7 +82,70 @@ trap(struct trapframe *tf)
             cpuid(), tf->cs, tf->eip);
     lapiceoi();
     break;
-    //hacer un case nuevo para el T_PGFLT y que haga lo que hace el growproc
+  //hacer un case nuevo para el T_PGFLT y que haga lo que hace el growproc
+  case T_PGFLT:
+    uint va = rcr2();
+    uint pagerr = PGROUNDDOWN(va);
+    pde_t * pgfltpde = walkpgdir(myproc()->pgdir, (void *)pagerr, 0);
+
+    if(va >= myproc()->sz)
+    {
+      if(va >= KERNBASE || va + PGSIZE > KERNBASE)
+      {
+        cprintf("T_PGFLT accessed a kernel page\n");
+        myproc()->killed = 1;
+      }
+    }
+    else if(pgfltpde && *pgfltpde & PTE_P)
+    {
+      if (!(tf->err & PTE_U))
+        panic("kernel had a page fault");
+
+      if (!(*pgfltpde & PTE_U))
+        cprintf("Page fault on addr: 0x%x. Tryed to access protected memory.\n", pagerr);
+
+      else
+      {
+        if (tf->err & PTE_W)
+          cprintf("Page fault by error on write access on 0x%x", pagerr);
+        else
+          cprintf("Page fault by error on read access on 0x%x", pagerr);
+      }
+      myproc()->killed = 1;
+    }
+    else
+    {
+      char *mem;
+      mem = kalloc();
+      if(mem == 0)
+      {
+        cprintf("T_PGFLT out of memory\n");
+        myproc()->killed = 1;
+      }
+      else
+      {
+        memset(mem, 0, PGSIZE);
+        if (mappages(myproc()->pgdir, (char *)PGROUNDDOWN(va), PGSIZE, V2P(mem), PTE_W | PTE_U) < 0)
+        {
+          cprintf("T_PGFLT mapping failed\n");
+          kfree(mem);
+          myproc()->killed = 1;
+        }
+      }
+    }
+
+    break;
+
+
+
+
+
+
+
+
+
+
+    
 
   //PAGEBREAK: 13
   default:
