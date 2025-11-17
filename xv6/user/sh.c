@@ -169,15 +169,16 @@ main(void)
     if(fork1() == 0){
       runcmd(parsecmd(buf));
     }
-      int status;
-      wait(&status);
+    int status;
+    if(wait(&status) <= 0)
+      continue;
 
-      if(WIFEXITED(status)){
-        printf(1, "Output Code: %d\n", WEXITSTATUS(status));
+    if(WIFEXITED(status)){
+      printf(1, "Output Code: %d\n", WEXITSTATUS(status));
 
-      } else if(WIFSIGNALED(status)){
-        printf(1, "Output Code: %d\n", WEXITTRAP(status)); //revisar
-      }
+    } else if(WIFSIGNALED(status)){
+      printf(1, "Output Code: %d\n", WEXITTRAP(status)); //revisar
+    }
     //wait(NULL);
   }
   exit(0);

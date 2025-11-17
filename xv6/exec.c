@@ -99,6 +99,7 @@ exec(char *path, char **argv)
   curproc->sz = sz;
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
+  curproc->userPage = sz - PGSIZE; //guardar la dirección de la página de usuario de la pila
   switchuvm(curproc);
   freevm(oldpgdir, 1);
   return 0;

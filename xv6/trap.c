@@ -43,11 +43,11 @@ trap(struct trapframe *tf)
 {
   if(tf->trapno == T_SYSCALL){
     if(myproc()->killed)
-      exit(1);
+      exit(tf->trapno+1);
     myproc()->tf = tf;
     syscall();
     if(myproc()->killed)
-      exit(1);
+      exit(tf->trapno+1);
     return;
   }
 
@@ -83,20 +83,24 @@ trap(struct trapframe *tf)
     lapiceoi();
     break;
   //hacer un case nuevo para el T_PGFLT y que haga lo que hace el growproc
+  /*
   case T_PGFLT:
     uint va = rcr2();
     uint pagerr = PGROUNDDOWN(va);
     pde_t * pgfltpde = walkpgdir(myproc()->pgdir, (void *)pagerr, 0);
 
-    if(va >= myproc()->sz)
+    if(va >= KERNBASE || va >= myproc()->sz)
     {
-      if(va >= KERNBASE || va + PGSIZE > KERNBASE)
-      {
-        cprintf("T_PGFLT accessed a kernel page\n");
-        myproc()->killed = 1;
-      }
+      if(va >= KERNBASE)
+        cprintf("T_PGFLT: Acceso a memoria del kernel (0x%x)\n", va);
+      else
+        cprintf("T_PGFLT: Acceso por encima de sz (0x%x)\n", va); 
+      
+      myproc()->killed = 1;
+      break; 
     }
-    else if(pgfltpde && *pgfltpde & PTE_P)
+    
+    if(pgfltpde && *pgfltpde & PTE_P)
     {
       if (!(tf->err & PTE_U))
         panic("kernel had a page fault");
@@ -120,6 +124,7 @@ trap(struct trapframe *tf)
       if(mem == 0)
       {
         cprintf("T_PGFLT out of memory\n");
+        //kfree(mem);
         myproc()->killed = 1;
       }
       else
@@ -135,12 +140,51 @@ trap(struct trapframe *tf)
     }
 
     break;
+  */
+  
+  case T_PGFLT: {
+    uint va = rcr2(); // Recupera la dirección que causó el fallo
+    char *mem;
 
+    // Comprueba si la dirección está FUERA del espacio de usuario válido.
+    // 1. ¿Está por encima del heap? (va >= sz)
+    // 2. ¿Está en el kernel? (va >= KERNBASE)
+    // 3. ¿Está por debajo de la pila (p.ej., en la página de guarda)? (va < myproc()->userPage)
+    //
+    
+    if(va >= KERNBASE || va >= myproc()->sz || va < myproc()->userPage) { 
+      cprintf("Page fault: Acceso a memoria invalida (0x%x)\n", va);
+      myproc()->killed = 1; // Matar al proceso
+      break;
+    }
 
+    // Si llegamos aquí, es un fallo de página válido para una página no asignada.
+    // Redondeamos la dirección hacia abajo al inicio de la página.
+    va = PGROUNDDOWN(va);
 
+    // Asignamos una página física.
+    mem = kalloc();
+    if(mem == 0) {
+      cprintf("T_PGFLT: kalloc out of memory\n");
+      // NO llames a kfree(mem) aquí, ¡mem es 0!
+      myproc()->killed = 1;
+      break;
+    }
 
+    // Inicializamos la página a cero.
+    memset(mem, 0, PGSIZE);
+    
+    // Mapeamos la página física a la dirección virtual.
+    if(mappages(myproc()->pgdir, (char*)va, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0) {
+      cprintf("T_PGFLT: mappages failed\n");
+      kfree(mem); // Aquí SÍ se libera, porque kalloc() funcionó pero mappages() falló.
+      myproc()->killed = 1;
+      break;
+    }
 
-
+    // El mapeo fue exitoso, salimos del trap y el proceso reintentará la instrucción.
+    break;
+  }
 
 
 
@@ -170,7 +214,7 @@ trap(struct trapframe *tf)
   // (If it is still executing in the kernel, let it keep running
   // until it gets to the regular system call return.)
   if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER)
-    exit(1);
+    exit(tf->trapno+1);
 
   // Force process to give up CPU on clock tick.
   // If interrupts were on while locks held, would need to check nlock.
@@ -180,5 +224,5 @@ trap(struct trapframe *tf)
 
   // Check if the process has been killed since we yielded
   if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER)
-    exit(1);
+    exit(tf->trapno+1);
 }

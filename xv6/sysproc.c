@@ -21,9 +21,9 @@ sys_exit(void)
   if(argint(0, &e_status) < 0){
     return -1;
   }
-
+  e_status = e_status << 8; 
   exit(e_status);
-  return 0;  // not reached
+  return 0;  
 }
 
 int
@@ -31,7 +31,7 @@ sys_wait(void)
 {
   int *status;
 
-  if(argptr(0, (void*)&status, sizeof(int)) < 0){
+  if(argptr(0, (void**)&status, sizeof(int)) < 0){
     return -1;
   }
 
