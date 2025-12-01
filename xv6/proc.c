@@ -7,9 +7,15 @@
 #include "proc.h"
 #include "spinlock.h"
 
+struct cola { // Estructura para guardar primer y ultimo proceso de la cola
+  struct proc *primer;
+  struct proc *ultimo;
+};
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
+  struct cola tabla[MAXPRIO]; //tabla de colas
 } ptable;
 
 static struct proc *initproc;
@@ -19,6 +25,21 @@ extern void forkret(void);
 extern void trapret(void);
 
 static void wakeup1(void *chan);
+
+//Funcion para añadir proceso al final de cola
+void
+añadeProceso() 
+{
+
+}
+
+//Funcion para eliminar el proceso al comienzo de cola
+void
+borraProceso()
+{
+
+}
+
 
 void
 pinit(void)

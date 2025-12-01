@@ -100,6 +100,9 @@ exec(char *path, char **argv)
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
   curproc->userPage = sz - PGSIZE; //guardar la dirección de la página de usuario de la pila
+  curproc->prio = 5; //prioridad del proceso al valor máximo
+  curproc->siguiente = NULL; //puntero al siguiente proceso en la cola como nulo
+
   switchuvm(curproc);
   freevm(oldpgdir, 1);
   return 0;
