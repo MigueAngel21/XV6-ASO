@@ -11,5 +11,8 @@
 #define LOGSIZE      (MAXOPBLOCKS*3)  // max data blocks in on-disk log
 #define NBUF         (MAXOPBLOCKS*3)  // size of disk block cache
 #define FSSIZE       1000  // size of file system in blocks
-#define MAXPRIO 10 // Prioridad maxima
+#define MAXPRIO 10 // Numero de prioridades(0 a 9)
+#define LOWEST_PRIO 9
+#define NORM_PRIO 5
+#define HIGHEST_PRIO 0 
 

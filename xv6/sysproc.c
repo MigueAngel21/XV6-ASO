@@ -54,6 +54,37 @@ sys_getpid(void)
   return myproc()->pid;
 }
 
+
+int
+sys_getprio(void)
+{
+  int pid;
+  if(argint(0, &pid) < 0)
+    return -1;
+
+  return getprio(pid);
+}
+
+
+int
+sys_setprio(void)
+{
+  int pid;
+  int aux;
+
+  if(argint(0, &pid) < 0)
+    return -1;
+
+  if(argint(1, &aux) < 0)
+    return -1;
+  
+  unsigned int prio = (unsigned int) aux;
+
+  return setprio(pid, prio);
+}
+
+
+
 int
 sys_sbrk(void)
 {

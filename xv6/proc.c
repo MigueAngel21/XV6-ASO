@@ -624,3 +624,38 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+
+int
+getprio(int pid)
+{
+  if(pid <= 0)
+    return -1;
+
+  struct proc *p;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->pid == pid){
+      return p->prio;
+    }
+  }
+
+  return -1;
+}
+
+
+int
+setprio(int pid, unsigned int prio)
+{
+  if(pid <= 0 || prio >= MAXPRIO || prio < 0)
+    return -1;
+  
+  struct proc *p;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->pid == pid){
+      p->prio = prio;
+      return 0;
+    }
+  }
+
+  return -1;
+}
