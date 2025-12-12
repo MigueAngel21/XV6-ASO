@@ -94,7 +94,7 @@ sys_sbrk(void)
   if(argint(0, &n) < 0)
     return -1;
 
-  addr = myproc()->sz; //este tamaño se debe incrementar
+  addr = myproc()->sz; 
 
   if(n<0)
   {
@@ -103,7 +103,7 @@ sys_sbrk(void)
   }
   else
   {
-    myproc()->sz += n; //incrementa el tamaño del proceso 
+    myproc()->sz += n; 
   }
   
 

@@ -26,6 +26,7 @@ extern void trapret(void);
 
 static void wakeup1(void *chan);
 
+
 //Funcion para añadir proceso al final de cola
 void
 anadeProceso(struct proc *p) 
@@ -44,6 +45,7 @@ anadeProceso(struct proc *p)
   }
   p->siguiente = NULL;
 }
+
 
 //Funcion para eliminar el proceso al comienzo de cola
 void
@@ -71,13 +73,6 @@ void
 pinit(void)
 {
   initlock(&ptable.lock, "ptable");
-  /*
-  for(int i = 0; i < MAXPRIO; i++) {
-    struct cola *c = &ptable.tabla[i];
-    c->primer = NULL;
-    c->ultimo = NULL;
-  }
-    */
 }
 
 
@@ -266,7 +261,7 @@ fork(void)
 
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
-  np->prio = curproc->prio; // El proceso hijo hereda la prioridad del padre
+  np->prio = curproc->prio; 
 
   pid = np->pid;
 
@@ -308,8 +303,6 @@ exit(int e_status)
   curproc->cwd = 0;
 
   acquire(&ptable.lock);
-
-  //
 
   // Parent might be sleeping in wait().
   wakeup1(curproc->parent);
@@ -405,20 +398,15 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-       /*  
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue; */
 
     uint i = 0;
-    while (i<MAXPRIO){ //Recorremos todas las colas de prioridades
-      struct cola *colaActual = &ptable.tabla[i]; //Se obtiene la cola en funcion de la prioridad del proceso
-      p = colaActual->primer; //Obtenemos el primer elemento de la cola
-      if(p == NULL){ //Si la cola está vacía, pasamos a la siguiente
+    while (i<MAXPRIO){ 
+      struct cola *colaActual = &ptable.tabla[i]; 
+      p = colaActual->primer; 
+      if(p == NULL){ 
         i++;
         continue;
       }
-      //Si hay un proceso en la cola, lo sacamos de la cola para ejecutarlo
       quitaProceso(p);
 
       // Switch to chosen process.  It is the process's job
@@ -434,7 +422,7 @@ scheduler(void)
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
-      //Se finaliza el planificador ya que se ha elegido un proceso para ejecutar en la cpu
+      
       i = MAXPRIO; 
     }
     release(&ptable.lock);
@@ -474,7 +462,7 @@ yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
   myproc()->state = RUNNABLE;
-  anadeProceso(myproc()); // Volver a añadir el proceso a la cola de prioridades correspondiente
+  anadeProceso(myproc()); // añadir el proceso a la cola de prioridades correspondiente
   sched();
   release(&ptable.lock);
 }
@@ -550,7 +538,7 @@ wakeup1(void *chan)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan) {
       p->state = RUNNABLE;
-      anadeProceso(p); //Al pasar a listo, volver a añadir el proceso a la cola de prioridades correspondiente
+      anadeProceso(p); //añadir el proceso a la cola de prioridades correspondiente
     }
 }
 
@@ -578,7 +566,7 @@ kill(int pid)
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING){
         p->state = RUNNABLE;
-        anadeProceso(p); //Al pasar a listo, volver a añadir el proceso a la cola de prioridades correspondiente
+        anadeProceso(p); //añadir el proceso a la cola de prioridades correspondiente
       }
       release(&ptable.lock);
       return 0;
